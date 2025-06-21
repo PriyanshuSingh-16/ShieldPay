@@ -1,3 +1,4 @@
 node_modules
 .env
-ml_inference\upi_qr_stego_dataset_lsb
+upi_qr_stego_dataset_lsb
+ml_inference/multiclass_steganography_detector_model.h5
