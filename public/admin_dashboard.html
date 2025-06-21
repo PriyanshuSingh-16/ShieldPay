@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - QR Steganography Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/admin_dashboard.html" class="navbar-brand">Admin Panel</a>
+        <div class="navbar-links">
+            <a href="/transaction_analysis.html">Transaction Analysis</a>
+            <button id="logoutBtn" class="logout-btn-nav">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container mt-20">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8">Reported QR Codes for Admin Review</h2>
+        <div id="reportedQrCodesGrid" class="dashboard-grid">
+            <!-- Reported QR code cards will be loaded here -->
+            <p id="loadingMessage" class="col-span-full text-center text-gray-600">Loading reported QR codes...</p>
+        </div>
+        <div id="noReportedQRCodesMessage" class="hidden text-center text-gray-600 mt-8">
+            <p>No QR codes have been reported for review.</p>
+        </div>
+    </div>
+
+    <script>
+        const reportedQrCodesGrid = document.getElementById('reportedQrCodesGrid');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const noReportedQRCodesMessage = document.getElementById('noReportedQRCodesMessage');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        async function fetchReportedQRCodes() {
+            loadingMessage.classList.remove('hidden');
+            noReportedQRCodesMessage.classList.add('hidden');
+            reportedQrCodesGrid.innerHTML = ''; // Clear previous content
+
+            try {
+                const response = await fetch('/api/admin/dashboard', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    // Not authorized as admin, redirect to login
+                    alert('Not authorized. Redirecting to login.');
+                    window.location.href = '/';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.length === 0) {
+                    noReportedQRCodesMessage.classList.remove('hidden');
+                } else {
+                    data.forEach(scan => {
+                        const card = document.createElement('div');
+                        card.className = 'qr-card';
+                        
+                        let initialStatusClass = '';
+                        if (scan.predictedClass === 'Safe') {
+                            initialStatusClass = 'status-safe';
+                        } else if (scan.predictedClass === 'Suspicious') {
+                            initialStatusClass = 'status-suspicious';
+                        } else if (scan.predictedClass === 'Malicious') {
+                            initialStatusClass = 'status-malicious';
+                        }
+
+                        let adminStatusHTML = '';
+                        if (scan.adminVerified) {
+                            let adminStatusClass = '';
+                            if (scan.adminVerifiedClass === 'Safe') {
+                                adminStatusClass = 'status-safe';
+                            } else if (scan.adminVerifiedClass === 'Suspicious') {
+                                adminStatusClass = 'status-suspicious';
+                            } else if (scan.adminVerifiedClass === 'Malicious') {
+                                adminStatusClass = 'status-malicious';
+                            }
+                            const adminConfidenceValue = Math.max(...scan.adminVerifiedConfidence);
+                            const adminConfidencePercent = (adminConfidenceValue * 100).toFixed(2);
+
+                            adminStatusHTML = `
+                                <p class="mt-2"><strong>Admin Verified:</strong> <span class="status-badge ${adminStatusClass}">${scan.adminVerifiedClass}</span></p>
+                                <p><strong>Admin Confidence:</strong> ${adminConfidencePercent}%</p>
+                                <p class="text-xs text-gray-500">Verified on: ${new Date(scan.adminVerificationDate).toLocaleString()}</p>
+                            `;
+                        }
+
+                        card.innerHTML = `
+                            <h3 class="flex items-center">Scan ID: ${scan._id.substring(0, 8)}...</h3>
+                            <p><strong>Reported By:</strong> ${scan.userId ? scan.userId.username : 'N/A'}</p>
+                            <p><strong>Report Details:</strong> ${scan.reportDetails || 'No details provided'}</p>
+                            <p><strong>Original Predicted Class:</strong> <span class="status-badge ${initialStatusClass}">${scan.predictedClass}</span></p>
+                            <p><strong>Scanned On:</strong> ${new Date(scan.scanDate).toLocaleString()}</p>
+                            ${adminStatusHTML}
+                            <div class="flex gap-2 mt-4 w-full">
+                                <button class="btn btn-primary flex-1 ${scan.adminVerified ? 'hidden' : ''}" data-id="${scan._id}" data-action="verify">Verify</button>
+                                <button class="btn btn-secondary flex-1" data-id="${scan._id}" data-action="remove">Remove</button>
+                            </div>
+                        `;
+                        reportedQrCodesGrid.appendChild(card);
+                    });
+
+                    // Add event listeners for admin actions
+                    reportedQrCodesGrid.querySelectorAll('button').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            const scanId = e.target.dataset.id;
+                            const action = e.target.dataset.action;
+
+                            if (action === 'verify') {
+                                if (!confirm('Are you sure you want to verify this QR code using the ML model?')) return;
+                                try {
+                                    const response = await fetch(`/api/admin/verify-qr/${scanId}`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' }
+                                    });
+                                    const data = await response.json();
+                                    if (response.ok) {
+                                        alert('Verification complete! Predicted: ' + data.prediction.predictedClass);
+                                        // If "Safe", automatically remove after displaying result
+                                        if (data.prediction.predictedClass === 'Safe') {
+                                            alert('QR code is Safe and will be automatically removed from dashboard.');
+                                            await removeQRCode(scanId); // Call remove function
+                                        } else {
+                                            fetchReportedQRCodes(); // Refresh the list if not removed
+                                        }
+                                    } else {
+                                        alert(data.message || 'Verification failed.');
+                                    }
+                                } catch (error) {
+                                    console.error('Error verifying QR code:', error);
+                                    alert('An error occurred during verification.');
+                                }
+                            } else if (action === 'remove') {
+                                await removeQRCode(scanId);
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching admin dashboard data:', error);
+                alert('Could not load admin dashboard data. Please try logging in again as admin.');
+                window.location.href = '/'; // Redirect to login on serious error
+            } finally {
+                loadingMessage.classList.add('hidden');
+            }
+        }
+
+        async function removeQRCode(scanId) {
+            if (!confirm('Are you sure you want to remove this QR code record? This action cannot be undone.')) return;
+            try {
+                const response = await fetch(`/api/admin/remove-qr/${scanId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message);
+                    fetchReportedQRCodes(); // Refresh the list
+                } else {
+                    alert(data.message || 'Failed to remove QR code.');
+                }
+            } catch (error) {
+                console.error('Error removing QR code:', error);
+                alert('An error occurred while removing.');
+            }
+        }
+
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/logout');
+                if (response.ok) {
+                    window.location.href = '/'; // Redirect to login page
+                } else {
+                    alert('Logout failed.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('An error occurred during logout.');
+            }
+        });
+
+        // Fetch data when the dashboard page loads
+        document.addEventListener('DOMContentLoaded', fetchReportedQRCodes);
+    </script>
+</body>
+</html>

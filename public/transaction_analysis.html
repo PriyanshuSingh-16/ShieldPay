@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Analysis - QR Steganography Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/admin_dashboard.html" class="navbar-brand">Admin Panel</a>
+        <div class="navbar-links">
+            <a href="/admin_dashboard.html">Admin Dashboard</a>
+            <button id="logoutBtn" class="logout-btn-nav">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container mt-20">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Transaction Analysis</h2>
+        <p class="text-center text-gray-600">This page is under development. More features will be added in the future.</p>
+    </div>
+
+    <script>
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/logout');
+                if (response.ok) {
+                    window.location.href = '/'; // Redirect to login page
+                } else {
+                    alert('Logout failed.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('An error occurred during logout.');
+            }
+        });
+    </script>
+</body>
+</html>

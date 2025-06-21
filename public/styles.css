@@ -1,0 +1,359 @@
+/* You will need to link Tailwind CSS CDN in your HTML files */
+/* Add this to the <head> of each HTML file:
+   <script src="https://cdn.tailwindcss.com"></script>
+*/
+
+/* Custom styles for basic layout */
+body {
+    font-family: 'Inter', sans-serif; /* Recommended font */
+    background-color: #f0f4f8;
+    color: #334155;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 500px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="file"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="file"]:focus {
+    border-color: #3b82f6; /* Blue-500 */
+}
+
+.btn {
+    display: inline-block;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.btn-primary {
+    background-color: #3b82f6; /* Blue-500 */
+    color: #ffffff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb; /* Blue-600 */
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #e2e8f0; /* Gray-200 */
+    color: #4a5568;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e0; /* Gray-300 */
+    transform: translateY(-1px);
+}
+
+.message {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.message.success {
+    background-color: #d1fae5; /* Green-100 */
+    color: #065f46; /* Green-800 */
+    border: 1px solid #34d399; /* Green-400 */
+}
+
+.message.error {
+    background-color: #fee2e2; /* Red-100 */
+    color: #991b1b; /* Red-800 */
+    border: 1px solid #f87171; /* Red-400 */
+}
+
+.navbar {
+    width: 100%;
+    background-color: #1e293b; /* Slate-800 */
+    padding: 1rem 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    color: #e2e8f0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.navbar-links a {
+    color: #94a3b8; /* Slate-400 */
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.navbar-links a:hover {
+    color: #cbd5e0; /* Slate-200 */
+}
+
+.navbar-links .btn {
+    width: auto;
+    padding: 0.5rem 1rem;
+    margin-left: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+/* Dashboard specific styles */
+.dashboard-container {
+    width: 90%;
+    max-width: 1000px;
+    margin-top: 6rem; /* To clear fixed navbar */
+    padding: 2.5rem;
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.qr-card {
+    background-color: #f8fafc; /* Gray-50 */
+    border: 1px solid #e2e8f0; /* Gray-200 */
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease-in-out;
+}
+
+.qr-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.qr-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b; /* Slate-800 */
+    margin-bottom: 0.75rem;
+}
+
+.qr-card p {
+    font-size: 0.95rem;
+    color: #475569; /* Slate-700 */
+    margin-bottom: 0.5rem;
+}
+
+.qr-card .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+
+.status-safe {
+    background-color: #d1fae5; /* Green-100 */
+    color: #065f46; /* Green-800 */
+}
+
+.status-suspicious {
+    background-color: #fffacd; /* Yellow-100 */
+    color: #8b5f04; /* Yellow-800 */
+}
+
+.status-malicious {
+    background-color: #fee2e2; /* Red-100 */
+    color: #991b1b; /* Red-800 */
+}
+
+.qr-card .report-btn {
+    background-color: #ef4444; /* Red-500 */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    margin-top: 1rem;
+}
+
+.qr-card .report-btn:hover {
+    background-color: #dc2626; /* Red-600 */
+}
+
+.qr-card .reported-badge {
+    background-color: #bfdbfe; /* Blue-200 */
+    color: #1e3a8a; /* Blue-800 */
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    margin-top: 1rem;
+}
+
+/* Admin specific button styles */
+.qr-card .btn-primary { /* Verify button */
+    background-color: #3b82f6; /* Blue-500 */
+    color: white;
+}
+.qr-card .btn-primary:hover {
+    background-color: #2563eb; /* Blue-600 */
+}
+
+.qr-card .btn-secondary { /* Remove button */
+    background-color: #e2e8f0; /* Gray-200 */
+    color: #4a5568;
+}
+.qr-card .btn-secondary:hover {
+    background-color: #cbd5e0; /* Gray-300 */
+}
+
+
+/* Upload page specific styles */
+.analysis-result {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    background-color: #e0f2fe; /* Light blue background */
+    border: 1px solid #93c5fd; /* Medium blue border */
+    color: #1e40af; /* Dark blue text */
+}
+
+.analysis-result h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #1e293b;
+}
+
+.analysis-result p {
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.analysis-result p strong {
+    color: #0f172a; /* Darker text for labels */
+}
+
+.analysis-result .confidence-bar-container {
+    width: 100%;
+    background-color: #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.analysis-result .confidence-bar {
+    height: 1.5rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Colors for confidence bars */
+.confidence-safe { background-color: #22c55e; } /* Green-500 */
+.confidence-suspicious { background-color: #facc15; } /* Yellow-500 */
+.confidence-malicious { background-color: #ef4444; } /* Red-500 */
+
+/* Logout button specific for dashboard/upload */
+.logout-btn-nav {
+    background-color: #dc2626; /* Red-600 */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.logout-btn-nav:hover {
+    background-color: #b91c1c; /* Red-700 */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    .navbar-links {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .navbar-links a, .navbar-links .btn {
+        margin: 0.5rem 0;
+    }
+    .dashboard-container, .container {
+        width: 95%;
+        padding: 1.5rem;
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* Stack cards on small screens */
+    }
+}

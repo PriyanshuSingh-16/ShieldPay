@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - QR Steganography Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard.html" class="navbar-brand">QR Stego Detector</a>
+        <div class="navbar-links">
+            <a href="/upload.html">Upload QR</a>
+            <button id="logoutBtn" class="logout-btn-nav">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8">Your Scanned QR Codes</h2>
+        <div id="qrCodesGrid" class="dashboard-grid">
+            <!-- QR code cards will be loaded here -->
+            <p id="loadingMessage" class="col-span-full text-center text-gray-600">Loading QR codes...</p>
+        </div>
+        <div id="noQRCodesMessage" class="hidden text-center text-gray-600 mt-8">
+            <p>No QR codes scanned yet. <a href="/upload.html" class="text-blue-500 hover:underline">Upload your first QR code!</a></p>
+        </div>
+    </div>
+
+    <script>
+        const qrCodesGrid = document.getElementById('qrCodesGrid');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const noQRCodesMessage = document.getElementById('noQRCodesMessage');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        async function fetchDashboardData() {
+            loadingMessage.classList.remove('hidden');
+            noQRCodesMessage.classList.add('hidden');
+            qrCodesGrid.innerHTML = ''; // Clear previous content
+
+            try {
+                const response = await fetch('/api/dashboard', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                    // Cookies are sent automatically by the browser
+                });
+
+                if (response.status === 401) {
+                    // Not authenticated, redirect to login
+                    window.location.href = '/';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.length === 0) {
+                    noQRCodesMessage.classList.remove('hidden');
+                } else {
+                    data.forEach(scan => {
+                        const card = document.createElement('div');
+                        card.className = 'qr-card';
+                        
+                        let statusClass = '';
+                        if (scan.predictedClass === 'Safe') {
+                            statusClass = 'status-safe';
+                        } else if (scan.predictedClass === 'Suspicious') {
+                            statusClass = 'status-suspicious';
+                        } else if (scan.predictedClass === 'Malicious') {
+                            statusClass = 'status-malicious';
+                        }
+
+                        const scanDate = new Date(scan.scanDate).toLocaleString();
+                        const confidenceValue = Math.max(...scan.confidence); // Get max confidence value
+                        const confidencePercent = (confidenceValue * 100).toFixed(2);
+
+
+                        card.innerHTML = `
+                            <h3 class="flex items-center">Scan ID: ${scan._id.substring(0, 8)}...</h3>
+                            <p><strong>Predicted Class:</strong> <span class="status-badge ${statusClass}">${scan.predictedClass}</span></p>
+                            <p><strong>Confidence:</strong> ${confidencePercent}%</p>
+                            <p><strong>Scanned On:</strong> ${scanDate}</p>
+                            ${scan.reported ? 
+                                `<span class="reported-badge">Reported</span>` : 
+                                `<button class="report-btn" data-id="${scan._id}">Report QR</button>`
+                            }
+                        `;
+                        qrCodesGrid.appendChild(card);
+                    });
+
+                    // Add event listeners for report buttons
+                    qrCodesGrid.querySelectorAll('.report-btn').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            const scanId = e.target.dataset.id;
+                            const reportDetails = prompt("Enter details for reporting this QR code (optional):");
+                            
+                            try {
+                                const response = await fetch(`/api/report-qr/${scanId}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ reportDetails })
+                                });
+                                const data = await response.json();
+                                if (response.ok) {
+                                    alert('QR code reported successfully!');
+                                    fetchDashboardData(); // Refresh data
+                                } else {
+                                    alert(data.message || 'Failed to report QR code.');
+                                }
+                            } catch (error) {
+                                console.error('Error reporting QR code:', error);
+                                alert('An error occurred while reporting.');
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                alert('Could not load dashboard data. Please try logging in again.');
+                window.location.href = '/'; // Redirect to login on serious error
+            } finally {
+                loadingMessage.classList.add('hidden');
+            }
+        }
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/logout');
+                if (response.ok) {
+                    window.location.href = '/'; // Redirect to login page
+                } else {
+                    alert('Logout failed.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('An error occurred during logout.');
+            }
+        });
+
+        // Fetch data when the dashboard page loads
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+    </script>
+</body>
+</html>

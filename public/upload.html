@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload QR - QR Steganography Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard.html" class="navbar-brand">QR Stego Detector</a>
+        <div class="navbar-links">
+            <a href="/dashboard.html">Dashboard</a>
+            <button id="logoutBtn" class="logout-btn-nav">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container mt-20"> <!-- Added mt-20 to push content down due to fixed navbar -->
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Upload QR Code for Analysis</h2>
+        <form id="uploadForm">
+            <div class="form-group mb-6">
+                <label for="qrCodeImage" class="block text-gray-700 text-sm font-semibold mb-2">Select QR Code Image</label>
+                <input type="file" id="qrCodeImage" name="qrCodeImage" accept="image/png, image/jpeg" class="form-input w-full" required>
+                <p class="text-xs text-gray-500 mt-1">Accepted formats: PNG, JPEG (Max 5MB)</p>
+            </div>
+            <button type="submit" class="btn btn-primary w-full py-3">Analyze QR Code</button>
+        </form>
+        <div id="uploadMessage" class="message mt-4 hidden"></div>
+        <div id="analysisResult" class="analysis-result hidden">
+            <h3>Analysis Result:</h3>
+            <p><strong>Predicted Class:</strong> <span id="predictedClass"></span></p>
+            <p class="mt-4"><strong>Confidence Scores:</strong></p>
+            <div class="confidence-bar-container mt-2">
+                <div id="safeBar" class="confidence-bar confidence-safe" style="width:0%;"></div>
+            </div>
+            <div class="confidence-bar-container mt-1">
+                <div id="suspiciousBar" class="confidence-bar confidence-suspicious" style="width:0%;"></div>
+            </div>
+            <div class="confidence-bar-container mt-1">
+                <div id="maliciousBar" class="confidence-bar confidence-malicious" style="width:0%;"></div>
+            </div>
+            <p class="text-sm text-gray-600 mt-4">This result has been added to your dashboard.</p>
+        </div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadMessage = document.getElementById('uploadMessage');
+        const analysisResultDiv = document.getElementById('analysisResult');
+        const predictedClassSpan = document.getElementById('predictedClass');
+        const safeBar = document.getElementById('safeBar');
+        const suspiciousBar = document.getElementById('suspiciousBar');
+        const maliciousBar = document.getElementById('maliciousBar');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        async function showMessage(text, type) {
+            uploadMessage.textContent = text;
+            uploadMessage.className = `message mt-4 ${type}`;
+            uploadMessage.classList.remove('hidden');
+            setTimeout(() => {
+                uploadMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            analysisResultDiv.classList.add('hidden');
+            showMessage('Analyzing QR code... Please wait.', 'success'); // Using success for initial info
+
+            const fileInput = document.getElementById('qrCodeImage');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('Please select an image file.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('qrCodeImage', file);
+
+            try {
+                const response = await fetch('/api/upload-qr', {
+                    method: 'POST',
+                    body: formData // No Content-Type header needed for FormData; browser sets it
+                });
+
+                if (response.status === 401) {
+                    showMessage('Session expired or not logged in. Redirecting to login.', 'error');
+                    setTimeout(() => window.location.href = '/', 1500);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Analysis complete!', 'success');
+                    predictedClassSpan.textContent = data.prediction.predictedClass;
+                    
+                    const confidence = data.prediction.confidence; // Array: [safe, suspicious, malicious]
+                    safeBar.style.width = `${(confidence[0] * 100).toFixed(2)}%`;
+                    safeBar.textContent = `Safe: ${(confidence[0] * 100).toFixed(2)}%`;
+                    
+                    suspiciousBar.style.width = `${(confidence[1] * 100).toFixed(2)}%`;
+                    suspiciousBar.textContent = `Suspicious: ${(confidence[1] * 100).toFixed(2)}%`;
+                    
+                    maliciousBar.style.width = `${(confidence[2] * 100).toFixed(2)}%`;
+                    maliciousBar.textContent = `Malicious: ${(confidence[2] * 100).toFixed(2)}%`;
+
+                    analysisResultDiv.classList.remove('hidden');
+
+                } else {
+                    showMessage(data.message || 'Analysis failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('An error occurred during upload/analysis. Please try again.', 'error');
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/logout');
+                if (response.ok) {
+                    window.location.href = '/'; // Redirect to login page
+                } else {
+                    alert('Logout failed.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('An error occurred during logout.');
+            }
+        });
+    </script>
+</body>
+</html>

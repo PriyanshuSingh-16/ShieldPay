@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - QR Steganography Detector</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="container bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Login</h2>
+        <form id="loginForm">
+            <div class="form-group mb-6">
+                <label for="username" class="block text-gray-700 text-sm font-semibold mb-2">Username</label>
+                <input type="text" id="username" name="username" class="form-input w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div class="form-group mb-8">
+                <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <input type="password" id="password" name="password" class="form-input w-full px-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full py-3">Login</button>
+        </form>
+        <p class="text-center text-gray-600 text-sm mt-6">
+            Don't have an account? <a href="#" id="registerLink" class="text-blue-500 hover:underline">Register here</a>
+        </p>
+        <div id="message" class="message mt-4 hidden"></div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const registerLink = document.getElementById('registerLink');
+        const messageDiv = document.getElementById('message');
+
+        async function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message mt-4 ${type}`;
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = loginForm.username.value;
+            const password = loginForm.password.value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    // --- Conditional redirection based on isAdmin ---
+                    if (data.user && data.user.isAdmin) {
+                        window.location.href = '/admin_dashboard.html'; // Redirect admin to admin dashboard
+                    } else {
+                        window.location.href = '/dashboard.html'; // Redirect regular user to user dashboard
+                    }
+                } else {
+                    showMessage(data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('An error occurred during login. Please try again.', 'error');
+            }
+        });
+
+        // Simple register functionality (for hackathon, normally a separate page)
+        registerLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const username = loginForm.username.value;
+            const password = loginForm.password.value;
+
+            if (!username || !password) {
+                showMessage('Please enter a username and password to register.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message + '. You can now log in.', 'success');
+                    // Optionally clear form or auto-login
+                } else {
+                    showMessage(data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('An error occurred during registration. Please try again.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
