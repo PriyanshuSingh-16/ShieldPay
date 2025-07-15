@@ -1,5 +1,5 @@
 
-# Shield Pay - QR Code Security Analysis
+# Safe Pay - QR Code Security Analysis
 
 A comprehensive web application that uses machine learning to detect potentially malicious QR codes and protect users from security threats. Shield Pay combines advanced ML analysis with an intuitive interface to provide real-time QR code security assessment.
 
